@@ -1,32 +1,10 @@
 # clj-clinicaltrials-gov
 
-FIXME: description
+This is a script in clojure that pulls data from the clinicaltrials.gov API.
 
-## Installation
+Currently the goal is to mimic the data model put forth by https://aact.ctti-clinicaltrials.org.
 
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar clj-clinicaltrials-gov-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+This is a learning exercise for me to learn some clojure basics.
 
 ## License
 
