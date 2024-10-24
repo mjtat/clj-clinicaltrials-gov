@@ -32,13 +32,13 @@
                       "OverallStatus"
                       "LastKnownStatus"])
 
- 
+ ;; constructs query
  (defn construct-api-query [fields-to-query & pagelimit]
-   (if (empty? pagelimit)
+   (if (empty? pagelimit) ;;if there is no pagelimit then omit the pagesize api parameter
      (let [base-url "https://clinicaltrials.gov/api/v2/studies?fields="
            fields (str/join "|" fields-to-query)]
        (str base-url fields))
-     (let [base-url "https://clinicaltrials.gov/api/v2/studies?fields="
+     (let [base-url "https://clinicaltrials.gov/api/v2/studies?fields=" ;;if there is a pagelimit declared, at the pagesize api parameter
            fields (str base-url (str/join "|" fields-to-query) "&pageSize=")
            pl (first pagelimit)]
        (str fields pl))))
