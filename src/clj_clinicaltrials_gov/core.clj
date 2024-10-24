@@ -20,7 +20,17 @@
                       "StartDateType"
                       "StatusVerifiedDate"
                       "CompletionDate"
-                      "CompletionDateType"])
+                      "CompletionDateType"
+                      "PrimaryCompletionDate"
+                      "PrimaryCompletionDateType"
+                      "TargetDuration"
+                      "StudyType"
+                      "Acronym"
+                      "BaselinePopulationDescription"
+                      "BriefTitle"
+                      "OfficialTitle"
+                      "OverallStatus"
+                      "LastKnownStatus"])
 
  
  (defn construct-api-query [fields-to-query & pagelimit]
@@ -33,14 +43,14 @@
            pl (first pagelimit)]
        (str fields pl))))
 
-(def url (construct-api-query studies-fields 850))
+(def url (construct-api-query studies-fields 525))
 
 (defn get-ctgov-data-with-counter [url]
    (loop [current-url url
           all-res []
           next-token nil
-          retries 0] 
-     (if (< retries 6) 
+          retries 0] ;; set base parameters for recursive loop
+     (if (< retries 6) ;; if get 429 error, retry
        (let [raw-res (http/get current-url {:cookie-policy :none :disable-cookies true :accept :json})
              res (json/read-str (:body raw-res) :key-fn keyword)
              token (:nextPageToken res)
@@ -52,18 +62,18 @@
            (do
              (println "Rate limited, retrying...")
              (Thread/sleep 1000)
-             (recur current-url all-res next-token (inc retries)))
-           (if (seq token)
-             (let [updated-results (concat all-res res-studies)
+             (recur current-url all-res next-token (inc retries))) ;;retry if status 429
+           (if (seq token) ;if a token exists recurse and get the next page of resuylts
+             (let [updated-results (concat all-res res-studies) ;; append new results to old results
                    next-token (get-in res [:nextPageToken])
                    num_fetch (count res-studies)]
                (println "Next token:" next-token)
                (println "Number of Studies Fetched:" num_fetch)
-               (recur (str url "&pageToken=" next-token) updated-results next-token retries)) ; Increment loop-count
+               (recur (str url "&pageToken=" next-token) updated-results next-token retries)) ;; do recursion
              all-res)))
        all-res)))
 
-
+;; below calls the api, gets the declared variables, saves them into a dataframe in tablecloth
 (def studies
    (tc/dataset (vec (map (fn [entry]
                (let [nct_id (get-in entry [:protocolSection :identificationModule :nctId])
@@ -81,7 +91,16 @@
                      status_verified_date (get-in entry [:protocolSection :statusModule :statusVerifiedDate])
                      completion_date (get-in entry [:protocolSection :statusModule :completionDateStruct :date])
                      completion_date_type (get-in entry [:protocolSection :statusModule :completionDateStruct :type])
-                     
+                     primary_completion_date (get-in entry [:protocolSection :statusModule :primaryCompletionDateStruct :date])
+                     primary_completion_date_type (get-in entry [:protocolSection :statusModule :primaryCompletionDateStruct :type])
+                     target_duration (get-in entry [:protocolSection :designModule :targetDuration])
+                     study_type (get-in entry [:protocolSection :designModule :studyType])
+                     acronym (get-in entry [:protocolSection :identificationModule :acronym])
+                     baseline_pop_description (get-in entry [:resultsSection :baselineCharacteristicsModule :populationDescription])
+                     brief_title (get-in entry [:protocolSection :identificationModule :briefTitle])
+                     official_title (get-in entry [:protocolSection :identificationModule :officialTitle])
+                     overall_status (get-in entry [:protocolSection :statusModule :overallStatus])
+                     last_known_status (get-in entry [:protocolSection :statusModule :lastKnownStatus])
                      ]
                  {:nct_id nct_id
                   :study_first_submitted_date study_first_submitted_date
@@ -98,8 +117,18 @@
                   :status_verified_date status_verified_date
                   :completion_date completion_date
                   :completion_date_type completion_date_type
-                  
+                  :primary_completion_date primary_completion_date
+                  :primary_completion_date_type primary_completion_date_type
+                  :target_duration target_duration
+                  :study_type study_type
+                  :acronym acronym
+                  :baseline_pop_description baseline_pop_description
+                  :brief_title brief_title
+                  :official_title official_title
+                  :overall_status overall_status
+                  :last_known_status last_known_status
                   }))
              (get-ctgov-data-with-counter url)))))
+
 
 (tc/write-csv! tc_dat "test.csv")
