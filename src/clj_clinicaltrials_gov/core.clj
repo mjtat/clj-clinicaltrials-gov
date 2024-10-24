@@ -43,9 +43,7 @@
            pl (first pagelimit)]
        (str fields pl))))
 
-(def url (construct-api-query studies-fields 525))
-
-(defn get-ctgov-data-with-counter [url]
+(defn get-ctgov-data-with-retry [url]
    (loop [current-url url
           all-res []
           next-token nil
@@ -128,7 +126,7 @@
                   :overall_status overall_status
                   :last_known_status last_known_status
                   }))
-             (get-ctgov-data-with-counter url)))))
+             (get-ctgov-data-with-retry (construct-api-query studies-fields 525))))))
 
-
-(tc/write-csv! tc_dat "test.csv")
+(println (count(distinct(:nct_id studies))))
+(tc/write-csv! studies "ct_gov_studies.csv")
