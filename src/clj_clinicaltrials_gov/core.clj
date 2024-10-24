@@ -33,14 +33,14 @@
            pl (first pagelimit)]
        (str fields pl))))
 
-(def url (construct-api-query studies-fields 800))
+(def url (construct-api-query studies-fields 850))
 
 (defn get-ctgov-data-with-counter [url]
    (loop [current-url url
           all-res []
           next-token nil
-          retries 0] ; Initialize a loop counter
-     (if (< retries 6) ; Check if loop-count is less than 3
+          retries 0] 
+     (if (< retries 6) 
        (let [raw-res (http/get current-url {:cookie-policy :none :disable-cookies true :accept :json})
              res (json/read-str (:body raw-res) :key-fn keyword)
              token (:nextPageToken res)
@@ -61,7 +61,7 @@
                (println "Number of Studies Fetched:" num_fetch)
                (recur (str url "&pageToken=" next-token) updated-results next-token retries)) ; Increment loop-count
              all-res)))
-       all-res))) ; Return accumulated results after 3 loops
+       all-res)))
 
 
 (def studies
